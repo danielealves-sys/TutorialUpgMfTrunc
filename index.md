@@ -495,13 +495,13 @@ O objetivo é ajustar os valores genéticos dos animais quando há indivíduos s
 
 Tabela 2. Número de pais desconhecidos incluídos em cada UPG
 
-| Grupo UPG | Tipo de parente              | Nº de animais | Nº de animais genotipados |
-| --------- | ---------------------------- | ------------- | ------------------------- |
-| 1 (−1)    | Pais desconhecidos – Grupo 1 | 2             | 2                         |
-| 2 (−2)    | Pais desconhecidos – Grupo 2 | 2             | 2                         |
-| 3 (−3)    | Mães desconhecidas – Grupo 1 | 7             | 7                         |
-| 4 (−4)    | Mães desconhecidas – Grupo 2 | 7             | 7                         |
-| **Total** |                              | **18**        | **18**                    |
+|  Grupo UPG  | Tipo de parente             | Nº de animais | Nº de animais genotipados |
+| :---------: | :-------------------------: | :-----------: | :------------------------:|
+| 1 (−1)| Pais desconhecidos – Grupo 1 | 2 | 2 |
+| 2 (−2)| Pais desconhecidos – Grupo 2 | 2 | 2 |
+| 3 (−3)| Mães desconhecidas – Grupo 1 | 7 | 7 |
+| 4 (−4)| Mães desconhecidas – Grupo 2 | 7 | 7 |
+| **Total** |                              | **18**| **18**|
 
 > **Observação**: o número de animais do rebanho real não mudou (segue sendo 14).
 > O que acontece é que o programa expande o pedigree para incluir os 4 grupos fictícios (UPGs), resultando em 18 linhas.
@@ -683,6 +683,50 @@ Todos os arquivos necessários para a análise devem estar reunidos na mesma pas
 
 O BLUPF90+ exige IDs contínuos; por isso usamos o `renumf90` para renumerar animais e gerar o arquivo `renf90.par`.
 
+Cartão de parâmetros `renum4.par`
+
+```text
+DATAFILE
+feno.txt
+TRAITS
+3
+FIELDS_PASSED TO OUTPUT
+1
+WEIGHT(S)
+
+RESIDUAL_VARIANCE  # variances are from aireml results
+628.7
+EFFECT
+2 cross alpha
+EFFECT
+1 cross alpha  #animal
+RANDOM
+diagonal
+(CO)VARIANCES
+128.8
+EFFECT
+1 cross alpha  #animal
+RANDOM
+animal
+FILE
+ped_upg4.txt
+SNP_FILE
+geno.txt
+PED_DEPTH
+0
+UPG_TYPE
+in_pedigrees
+INBREEDING
+pedigree
+(CO)VARIANCES
+400.0
+
+OPTION solution mean
+OPTION random_upg 1
+OPTION EM-REML 25
+OPTION conv crit 1e-15
+```
+
 ### Passo 3 - Rodar no Prompt de Comando do Windows
 
 + Rode `renumf90.exe`:
@@ -731,29 +775,482 @@ trait/effect level  solution
    1   3        16          1.26207808
    1   3        17          3.98637864
    1   3        18         -1.31687192
-   ```
+```
 
 ## Truncamento de Pedigree - BLUP
 
+O truncamento do pedigree é controlado pelo comando **PED_DEPTH**, que deve ser incluído diretamente no **cartão de parâmetros** usado no renumf90/blupf90. Esse comando informa ao programa **quantas gerações de ancestrais** serão mantidas para cada animal com fenótipo: por exemplo, `PED_DEPTH 1` considera apenas os pais, `PED_DEPTH 2` inclui pais e avós, e assim por diante. Dessa forma, o usuário pode ajustar no arquivo de parâmetros o nível de truncamento desejado conforme os objetivos da análise.
+
+No pedigree original `ped.txt`, os dados possuíam apenas **fundadores e seus filhos**, o que impossibilitava observar diferenças entre os níveis de truncamento. Por isso, utilizei um **pedigree simulado** com mais gerações, permitindo demonstrar de forma prática como o truncamento atua: ao variar o valor de `PED_DEPTH`, o programa reduz progressivamente a profundidade do pedigree considerado na avaliação genética.
+
 ### Passo 1 - Preparação dos dados
 
-Todos os arquivos necessários para a análise devem estar reunidos na mesma pasta, incluindo o arquivo de fenótipos `feno.txt`, Pedigree com UPG: `ped_upg4.txt`, Genótipo`geno.txt`.
+Todos os arquivos necessários para a análise devem estar reunidos na mesma pasta, incluindo o arquivo de fenótipos `feno_expandido.txt`, Pedigree `ped_estendido.txt`.
 
-+ Fenótipo: `feno.txt`
++ Fenótipo: `feno_expandido.txt`
 
-+ Pedigree com UPG: `ped.txt`
+```text
+1 1 195.8
+2 1 182.5
+3 1 177.4
+4 1 150.1
+5 2 205.0
+6 2 198.0
+7 1 130.0
+8 1 156.0
+9 1 200.0
+10 2 195.0
+11 1 165.0
+12 2 185.0
+13 2 195.0
+14 1 145.0
+15 2 188.7
+16 1 181.8
+17 1 150.6
+18 2 168.1
+19 1 164.7
+20 1 185.1
+21 1 174.2
+22 1 162.7
+23 1 197.5
+24 1 175.2
+25 2 211.8
+26 2 202.1
+27 1 176.9
+28 2 155.4
+29 1 144.4
+30 2 167.9
+31 1 178.3
+32 1 174.1
+33 2 219.2
+34 1 176.4
+35 2 175.0
+36 2 208.0
+37 1 170.6
+38 2 190.0
+39 1 170.5
+40 1 172.2
+```
+
++ Pedigree: `ped_estendido.txt`
+
+```text
+# ped_estendido.txt — pedigree ampliado (animais 1..40)
+1 0 0
+2 0 0
+3 0 0
+4 0 0
+5 1 0
+6 1 0
+7 1 0
+8 2 0
+9 2 0
+10 3 0
+11 3 0
+12 4 0
+13 4 0
+14 4 0
+15 5 10
+16 6 11
+17 7 12
+18 8 13
+19 9 14
+20 5 11
+21 6 12
+22 7 13
+23 8 14
+24 9 10
+25 15 20
+26 16 21
+27 17 22
+28 18 23
+29 19 24
+30 15 21
+31 16 22
+32 17 23
+33 18 24
+34 19 20
+35 25 30
+36 26 31
+37 27 32
+38 28 33
+39 29 34
+40 25 31
+```
+
+**Observações**
+
+> Fundadores: 1,2,3,4 (pai=0 e mãe=0).
+
+> Geração 1: 5–14 (filhos dos fundadores).
+
+> Geração 2: 15–24 (filhos de 5–14).
+
+> Geração 3: 25–34 (netos dos fundadores).
+
+> Geração 4: 35–40 (bisnetos dos fundadores).
+
+### Passo 2 - Padronizar IDs
+
+O BLUPF90+ exige IDs contínuos; por isso usamos o `renumf90` para renumerar animais e gerar o arquivo `renf90.par`.
+
+Cartão de parâmetros `renum5.par`
+
+```text
+DATAFILE
+feno_expandido.txt
+TRAITS
+3
+FIELDS_PASSED TO OUTPUT
+1
+WEIGHT(S)
+
+RESIDUAL_VARIANCE  # variances are from aireml results
+628.7
+EFFECT
+2 cross alpha
+EFFECT
+1 cross alpha  #animal
+RANDOM
+diagonal
+(CO)VARIANCES
+128.8
+EFFECT
+1 cross alpha  #animal
+RANDOM
+animal
+FILE
+ped_estendido.txt
+#SNP_FILE
+#geno.txt
+PED_DEPTH
+3
+
+#OPTION method VCE
+OPTION solution mean
+OPTION EM-REML 25
+OPTION conv crit 1e-15
+OPTION alpha_size 40
+OPTION max_field_readine 50
+```
+
+**Se você colocar:**
+
+> PED_DEPTH 2 → mantém pais e avós.
+
+> PED_DEPTH 3 → mantém pais, avós e bisavós…
+
+> PED_DEPTH 0 → mantém todo o pedigree original, sem truncamento.
+
+### Passo 3 - Rodar no Prompt de Comando do Windows
+
++ Rode `renumf90.exe`:
+
+```shell
+.\renumf90.exe .\renum5.par > saida_renum.txt
+```
+
++ Agora você pode executar o BLUPF90+ e obter as soluções.
+
+```shell
+.\blupf90+.exe .\renf90.par > saida_blup.txt
+```
+
++ Soluções `solutions`
+
+```text
+trait/effect level  solution
+   1   1         1        170.28148126
+   1   1         2        190.94471270
+   1   2         1          4.33360507
+   1   2         2          0.68714727
+   1   2         3         -0.90386083
+   1   2         4         -1.00349913
+   1   2         5          0.69568149
+   1   2         6         -4.28913144
+   1   2         7         -0.38476059
+   1   2         8          1.94912042
+   1   2         9         -3.33880528
+   1   2        10         -3.87717254
+   1   2        11         -0.94540560
+   1   2        12          2.07448937
+   1   2        13          2.51083256
+   1   2        14          0.66700203
+   1   2        15         -1.28409112
+   1   2        16          4.63265009
+   1   2        17          0.83159128
+   1   2        18          3.53859298
+   1   2        19          1.89021821
+   1   2        20          1.13095283
+   1   2        21         -6.03385086
+   1   2        22         -4.39836076
+   1   2        23          1.20614072
+   1   2        24         -3.91606547
+   1   2        25          1.35925736
+   1   2        26          0.65497261
+   1   2        27          4.80244085
+   1   2        28          1.03706579
+   1   2        29         -2.71210406
+   1   2        30          2.89284524
+   1   2        31          0.05976659
+   1   2        32         -0.15652174
+   1   2        33          0.03666394
+   1   2        34         -3.42158721
+   1   2        35          0.32019689
+   1   2        36          2.38363661
+   1   2        37          1.19337668
+   1   2        38         -6.84428410
+   1   2        39         -2.42613729
+   1   2        40          5.04739510
+   1   3         1         -0.05838064
+   1   3         2         -0.04524471
+   1   3         3         -0.02419588
+   1   3         4          0.03373777
+   1   3         5          0.04405817
+   1   3         6         -0.04294463
+   1   3         7          0.01109597
+   1   3         8          0.05180389
+   1   3         9          0.01802116
+   1   3        10         -0.04225676
+   1   3        11         -0.02878871
+   1   3        12          0.00290179
+   1   3        13          0.03850131
+   1   3        14         -0.03618194
+   1   3        15          0.01932689
+   1   3        16         -0.00425249
+   1   3        17          0.03659816
+   1   3        18         -0.02134412
+   1   3        19         -0.03284637
+   1   3        20         -0.05617922
+   1   3        21          0.00572297
+   1   3        22         -0.02946106
+   1   3        23         -0.01353028
+   1   3        24          0.02495193
+   1   3        25         -0.05838644
+   1   3        26         -0.01284277
+   1   3        27          0.01812474
+   1   3        28          0.04183415
+   1   3        29         -0.02706179
+   1   3        30          0.01401234
+   1   3        31          0.03168350
+   1   3        32          0.02445609
+   1   3        33          0.03677137
+   1   3        34         -0.01379058
+   1   3        35          0.05534756
+   1   3        36         -0.03296040
+   1   3        37          0.02777029
+   1   3        38          0.03432507
+   1   3        39         -0.03349473
+   1   3        40          0.03538345
+```
 
 ## Truncamento de Pedigree - ssGBLUP
 
 ### Passo 1 - Preparação dos dados
 
-Todos os arquivos necessários para a análise devem estar reunidos na mesma pasta, incluindo o arquivo de fenótipos `feno.txt`, Pedigree com UPG: `ped._upg4.txt`, Genótipo`geno.txt`.
+Todos os arquivos necessários para a análise devem estar reunidos na mesma pasta, incluindo o arquivo de fenótipos `feno_expandido.txt`, Pedigree `ped_estendido.txt`, Genótipo`geno_40.txt`.
 
-+ Fenótipo: `feno.txt`
++ Fenótipo: `feno_expandido.txt`
 
-+ Pedigree com UPG: `ped.txt`
++ Pedigree: `ped_estendido.txt`
 
-+ Genótipo`geno.txt`
++ Genótipo`geno_40.txt`
+
+```text
+1  010100112110110110111100122101200000100201001000010010000122110001...
+2  011210012010101200012100100010111100100110000001011010100011000010...
+3  101100021100110020000000201100110000000000000101200010001011100000...
+4  101010010120110200100101120000011201100100000001111020100111101100...
+5  020100121100000011120010112000201000100100010000000010000211110011...
+6  010110112001120100101011111100111100100101000010010020100121111101...
+7  000111121111100110011100112101110000000101001001000010010012110002...
+8  000210122100112100011010011111121000000211001001020020100011101000...
+9  021111002000111200021211011110021100200011000002000020101011100010...
+10 011210122100110010000101101100100100100001001102101000001001100001...
+11 102000010200120110000100101100111101000000100000110020100100200000...
+12 101011011220210210210011010100010200100010010000111010000200001000...
+13 101100011120210200001101020000001101000001000000110020100021102000...
+14 112110000010100100211200110000011102000100000000011010000211001001...
+15 021210122200000010110110011100100000100001010101000010001101110001...
+16 111100111100020100000111011200121200100100000000010020000210210100...
+17 000020111221210210111111101001020100000010010000000010010111101001...
+18 100210112010201200010110020010110000000112000000020020100010202000...
+19 022010001000101200111210110010022101100101000001010010101101101010...
+20 011100121200010011010010112100211101100100010000100020100101210000...
+21 010121012110210200201012020100120100100100000000000020000110102000...
+22 100201011211100210011001021000110101000102001000100020000022211001...
+23 111210111010011100100110120100111101000110000001010020000122001001...
+24 011111012100211110010110002000111100100001001002001010000000100000...
+25 022210221200010000010120101000110000100000000101100010001200200001...
+26 011010002110120200101012011100221100000200000000000020000200101000...
+27 100110100220100210112010011001020101000011001000100020010022102000...
+28 211200111010100100110100120000121001000211000000020020000111101001...
+29 012110001100101110011100011010021100100002000002010000001100201000...
+30 010110022100110100101011021100110100100101010001000010000101201000...
+31 001100102210110210010001010100120201000101001000000020000111220100...
+32 101110211110101200111020111000111101000110010000000020000122001001...
+33 010120012000212110010000011000210100000102000001011010100010201000...
+34 022100111100001101011110001010111002000100000000110010100101201000...
+35 011100122100110100110011110000000000200100000000100010000201201001...
+36 011100002100110210010011011100221100000101000000000020000100211100...
+37 001020200220101210121020121000111101000020010000000020000022002000...
+38 120210111000201110000000011000121001000101000000020010000000101001...
+39 012110111200102110001100011010010001100101000001000010000101202000...
+40 012210111200110110020110111100110100000000001000000010001200210100...
+```
+
+### Passo 2 - Padronizar IDs
+
+O BLUPF90+ exige IDs contínuos; por isso usamos o `renumf90` para renumerar animais e gerar o arquivo `renf90.par`.
+
+Cartão de parâmetros `renum6.par`
+
+```text
+DATAFILE
+feno_expandido.txt
+TRAITS
+3
+FIELDS_PASSED TO OUTPUT
+1
+WEIGHT(S)
+
+RESIDUAL_VARIANCE  # variances are from aireml results
+628.7
+EFFECT
+2 cross alpha
+EFFECT
+1 cross alpha  #animal
+RANDOM
+diagonal
+(CO)VARIANCES
+128.8
+EFFECT
+1 cross alpha  #animal
+RANDOM
+animal
+FILE
+ped_estendido.txt
+SNP_FILE
+geno_40.txt
+PED_DEPTH
+3
+
+#OPTION method VCE
+OPTION solution mean
+OPTION EM-REML 25
+OPTION conv crit 1e-15
+OPTION alpha_size 40
+OPTION max_field_readine 50
+```
+
+### Passo 3 - Rodar no Prompt de Comando do Windows
+
++ Rode `renumf90.exe`:
+
+```shell
+.\renumf90.exe .\renum6.par > saida_renum.txt
+```
+
++ Agora você pode executar o BLUPF90+ e obter as soluções.
+
+```shell
+.\blupf90+.exe .\renf90.par > saida_gblup.txt
+```
+
++ Soluções `solutions`
+
+```text
+trait/effect level  solution
+   1   1         1        170.28144666
+   1   1         2        190.94428218
+   1   2         1          4.33368035
+   1   2         2          0.68726744
+   1   2         3         -0.90368362
+   1   2         4         -1.00414883
+   1   2         5          0.69592230
+   1   2         6         -4.28960536
+   1   2         7         -0.38498881
+   1   2         8          1.94946081
+   1   2         9         -3.33847710
+   1   2        10         -3.87678130
+   1   2        11         -0.94537541
+   1   2        12          2.07454660
+   1   2        13          2.51087849
+   1   2        14          0.66674558
+   1   2        15         -1.28443522
+   1   2        16          4.63276978
+   1   2        17          0.83146576
+   1   2        18          3.53880137
+   1   2        19          1.89029088
+   1   2        20          1.13157101
+   1   2        21         -6.03356157
+   1   2        22         -4.39872436
+   1   2        23          1.20597779
+   1   2        24         -3.91673548
+   1   2        25          1.35946119
+   1   2        26          0.65448819
+   1   2        27          4.80286266
+   1   2        28          1.03753848
+   1   2        29         -2.71247749
+   1   2        30          2.89277556
+   1   2        31          0.05975358
+   1   2        32         -0.15621699
+   1   2        33          0.03670064
+   1   2        34         -3.42168782
+   1   2        35          0.32034163
+   1   2        36          2.38358024
+   1   2        37          1.19341238
+   1   2        38         -6.84475369
+   1   2        39         -2.42578906
+   1   2        40          5.04714867
+   1   3         1         -0.05776725
+   1   3         2         -0.04715601
+   1   3         3         -0.02553559
+   1   3         4          0.03520562
+   1   3         5          0.04328412
+   1   3         6         -0.03867073
+   1   3         7          0.00906679
+   1   3         8          0.05155493
+   1   3         9          0.01770730
+   1   3        10         -0.04410603
+   1   3        11         -0.02600792
+   1   3        12          0.00270099
+   1   3        13          0.03852517
+   1   3        14         -0.03714989
+   1   3        15          0.01656999
+   1   3        16         -0.00272371
+   1   3        17          0.03738373
+   1   3        18         -0.02149939
+   1   3        19         -0.03646228
+   1   3        20         -0.05337196
+   1   3        21          0.00836920
+   1   3        22         -0.02741845
+   1   3        23         -0.00914086
+   1   3        24          0.02593318
+   1   3        25         -0.05963571
+   1   3        26         -0.01486797
+   1   3        27          0.01991680
+   1   3        28          0.04269781
+   1   3        29         -0.02775011
+   1   3        30          0.01375878
+   1   3        31          0.03125935
+   1   3        32          0.02327841
+   1   3        33          0.03701389
+   1   3        34         -0.01163305
+   1   3        35          0.05336535
+   1   3        36         -0.03285886
+   1   3        37          0.02853064
+   1   3        38          0.03330220
+   1   3        39         -0.03062555
+   1   3        40          0.03455360
+```
+
+## Metafundadores - Blup
+
+
+
+
+
 
 ## Referência
 
