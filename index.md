@@ -299,7 +299,7 @@ Pedigree `ped.txt`
 
 + Exemplo (`feno.txt` tenha 3 colunas: **ID animal, grupo contemporâneo, fenótipo**).
   
-Cartão de parâmetros `renun.par`
+Cartão de parâmetros `renum.par`
 
 ```text
 DATAFILE # Nome do arquivo de dados

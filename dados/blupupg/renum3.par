@@ -1,0 +1,39 @@
+DATAFILE
+feno.txt
+TRAITS
+3
+FIELDS_PASSED TO OUTPUT
+1
+WEIGHT(S)
+
+RESIDUAL_VARIANCE  # variances are from aireml results
+628.7
+EFFECT
+2 cross alpha
+EFFECT
+1 cross alpha  #animal
+RANDOM
+diagonal
+(CO)VARIANCES
+128.8
+EFFECT
+1 cross alpha  #animal
+RANDOM
+animal
+FILE
+ped_upg4.txt
+#SNP_FILE
+#geno.txt
+PED_DEPTH
+0
+UPG_TYPE
+in_pedigrees
+INBREEDING
+pedigree
+(CO)VARIANCES
+400.0
+
+OPTION solution mean
+OPTION random_upg 1
+OPTION EM-REML 25
+OPTION conv crit 1e-15

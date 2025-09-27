@@ -1,0 +1,26 @@
+DATAFILE
+feno.txt
+TRAITS
+3
+FIELDS_PASSED TO OUTPUT
+1
+WEIGHT(S)
+
+RESIDUAL_VARIANCE  # variances are from aireml results
+628.7
+EFFECT
+2 cross alpha
+EFFECT
+1 cross alpha  #animal
+RANDOM
+animal
+OPTIONAL
+
+FILE
+ped.txt
+FILE_POS
+1 2 3 0 0
+PED_DEPTH
+0
+(CO)VARIANCES
+128.8
