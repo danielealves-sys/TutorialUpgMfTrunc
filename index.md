@@ -222,6 +222,8 @@ Tabela 1. Informações fenotípicas, pedigree e grupo contemporâneo utilizadas
 | 4 | 2(13) | B | 195 |
 | 4 | 3(14) | A | 145 |
 
+Fonte: Adaptado de Pereira (2008).
+
 > **Observação:** o número antes do parêntese é a ordem do filho dentro do touro;
 
 > o número dentro do parêntese é o **ID real do bezerro** (usado no modelo animal).
@@ -1245,22 +1247,258 @@ trait/effect level  solution
    1   3        40          0.03455360
 ```
 
-## Metafundadores - Blup
+# Procedimento para Execução do Programa `gammaf90` e Solução de Erros de Biblioteca
+
+## Objetivo
+
+Orientar o usuário quanto à instalação e configuração corretas das bibliotecas necessárias para executar os programas da família `BLUPF90+`, em especial o `gammaf90`, garantindo o funcionamento adequado no ambiente **Linux** (WSL/Ubuntu).
+
+## Descrição
+
+Durante a execução do programa `gammaf90` (ou de outros executáveis da família `BLUPF90+`), pode ocorrer o seguinte erro no terminal:
+
+```shell
+./gammaf90.date: error while loading shared libraries: libmkl_intel_lp64.so.2: cannot open shared object file: No such file or directory
+```
+
+Esse erro indica que o sistema não encontrou as bibliotecas matemáticas da **Intel® oneAPI Math Kernel Library (oneMKL)**, necessárias para a execução dos programas.
+Para corrigir, deve-se instalar a biblioteca e configurar o ambiente conforme descrito abaixo.
+
+## Procedimento passo a passo
+
+### Instalação das bibliotecas Intel oneMKL
+
+1. Atualizar o sistema e instalar pré-requisitos:
+
+```shell
+sudo apt update
+sudo apt install -y gpg-agent wget
+```
+
+2. Adicionar a chave de autenticação Intel ao sistema:
+
+```shell
+wget -O- https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB \
+| gpg --dearmor | sudo tee /usr/share/keyrings/oneapi-archive-keyring.gpg > /dev/null
+```
+
+3. Adicionar o repositório Intel ao gerenciador APT:
+
+```shell
+echo "deb [signed-by=/usr/share/keyrings/oneapi-archive-keyring.gpg] https://apt.repos.intel.com/oneapi all main" \
+| sudo tee /etc/apt/sources.list.d/oneAPI.list
+```
+
+4. Atualizar a lista de pacotes:
+
+```shell
+sudo apt update
+```
+
+5. Instalar a biblioteca Intel® oneAPI Math Kernel Library (oneMKL):
+
+```shell
+sudo apt install intel-oneapi-mkl
+```
+
+6. Uma vez instalada a biblioteca, você precisa adicioná-la à variável de ambiente `LD_LIBRARY_PATH` para que o sistema possa encontrá-la durante a execução das aplicações. A melhor forma de fazer isso é executar o script de configuração do ambiente Intel que define todos os caminhos automaticamente.
+
+**Para configuração temporária (válida apenas até fechar o terminal):**
+
+```shell
+source /opt/intel/oneapi/setvars.sh
+```
+
+**Para configuração permanente (executada automaticamente a cada inicialização):**
+
+```shell
+echo 'source /opt/intel/oneapi/setvars.sh' >> ~/.bashrc
+source ~/.bashrc
+```
+
+7. Verificação da instalação.
+
+**Após seguir os passos anteriores, verifique se o `gammaf90` está funcionando corretamente executando:**
+
+```shell
+./gammaf90 < gamma.par
+```
+Se o programa iniciar sem apresentar erros de biblioteca, a configuração foi concluída com sucesso.
 
 
+## Metafundadores - (Procedimento completo para uso do gammaf90 e análise com metafundadores).
 
 
+### Objetivo
 
+Estabelecer o fluxo operacional para geração e uso de metafundadores nas análises genéticas com os programas da família BLUPF90, utilizando o `gammaf90` para criação da matriz Γ (Gamma) e o `blupf90+` para execução da análise.
+
+### Descrição
+
+Os metafundadores são pseudoindivíduos teóricos que representam a origem genética comum dos animais da base do pedigree (fundadores), permitindo modelar o relacionamento entre populações ancestrais.
+A inclusão de metafundadores melhora a precisão das análises genéticas ao ajustar a matriz de parentesco (A) para uma versão expandida (A(Γ)), que considera o relacionamento entre fundadores.
+
+O programa `gammaf90` é responsável por gerar a matriz Γ e um novo pedigree com metafundadores, enquanto o blupf90+ realiza a análise genética utilizando essas informações.
+
+O programa `gammaf90` faz parte da família de programas BLUPF90 e deve ser solicitado diretamente ao grupo desenvolvedor da Universidade da Geórgia (EUA), por meio do e-mail *blupf90@uga.edu*, mediante autorização para uso acadêmico. `https://nce.ads.uga.edu/software/`
+
+As análises genéticas podem ser conduzidas de duas formas:
+
+> Avaliação tradicional (BLUP Animal): utilizando apenas pedigree e fenótipos.
+
+> Avaliação genômica (ssGBLUP): integrando informações fenotípicas, genealógicas e genotípicas (SNPs).
+
+Ambas as metodologias podem incorporar metafundadores (`gammaf90`) para correção das relações genéticas entre animais fundadores.
+
+### Passo 1 - Preparação dos dados
+
+Todos os arquivos necessários para a análise devem estar reunidos na mesma pasta, incluindo o arquivo de fenótipos `feno_expandido.txt`e Pedigree `ped_estendido.txt`.
+
++ Fenótipo: `feno_expandido.txt`
+
++ Pedigree: `ped_estendido.txt`
+
+### Passo 2 - Padronizar IDs
+
+O BLUPF90+ exige IDs contínuos; por isso usamos o `renumf90` para renumerar animais e gerar o arquivo `renf90.par`.
+
+Cartão de parâmetros `renum7_meta.par`
+
+```text
+DATAFILE
+feno_expandido.txt
+TRAITS
+3
+FIELDS_PASSED TO OUTPUT
+1
+WEIGHT
+
+RESIDUAL_VARIANCE
+628.7
+EFFECT
+2 cross alpha
+EFFECT
+1 cross alpha  #animal
+RANDOM
+diagonal
+(CO)VARIANCES
+128.8
+EFFECT
+1 cross alpha  #animal
+RANDOM
+animal
+FILE
+ped_estendido.txt
+SNP_FILE
+#geno_40.txt
+PED_DEPTH
+3
+
+#OPTION method VCE
+#OPTION solution mean
+#OPTION EM-REML 25
+#OPTION conv crit 1e-15
+#OPTION alpha_size 40
+#OPTION max_field_readine 50
+#OPTION metafounders gamma
+```
+
+### Passo 3 - Rodar no Prompt de Comando do Linux
+
++ Rode `renumf90`:
+
+```shell
+.\renumf90 .\renum7_meta.par > saida_renum.txt
+```
+
+Verificar se foram gerados os seguintes arquivos:
+
+> `renf90.par` → parâmetros prontos para análise;
+
+> `renadd03.ped` → pedigree renumerado;
+
+> `renf90.dat` → dados fenotípicos renumerados.
+
+### Passo 4 - Geração da matriz de metafundadores (Γ)
+
+Objetivo: criar o arquivo `metafounders_gamma.dat` e o novo pedigree com metafundadores.
+
+Procedimento:
+
+1. Criar o arquivo `gamma.par` com o conteúdo abaixo:
+
+```shel
+PEDFILE renadd03.ped
+PED_DEPTH 10
+OPTION gamma
+```
+
+2. Executar o comando:
+
+```shell
+./gammaf90.date < gamma.par > saida_gammaf90.txt
+```
+
++ Agora você pode executar o BLUPF90+ e obter as soluções.
+
+```shell
+.\blupf90+.exe .\renf90.par > saida_gblup.txt
+```
+
+Arquivos gerados:
+
+> `metafounders_gamma.dat` → matriz de relacionamento entre metafundadores (Γ);
+
+> `pedigree_metafounders.txt` → pedigree ajustado com metafundadores;
+
+> Valor médio de Γ apresentado no txt (`saida_gammaf90.txt`).
+
+### Passo 5 - Análise genética com BLUPF90+
+
+Objetivo: realizar a avaliação genética considerando os metafundadores.
+
+Procedimento:
+
+1. Abrir o arquivo renf90.par (gerado na Etapa 1) e adicionar ao final a linha:
+
+```shell
+OPTION use_metafounders metafounders_gamma.dat
+```
+
+2. Executar o comando:
+
+```shell
+./blupf90+ < renf90.par > saida_blupf90.txt
+```
+Relatório de execução da análise com metafundadores.
+
++ Soluções `solutions`
+
+Soluções dos efeitos fixos e valores genéticos preditos.
+
+```text
+
+```
+
+Resumo:
+
+Após a renumeração dos animais com o programa `renumf90`, o arquivo de pedigree renumerado (`renadd03.ped`) deve ser utilizado no `gammaf90` para gerar a matriz de metafundadores (`metafounders_gamma.dat`) e o novo pedigree ajustado (`pedigree_metafounders.txt`).
+Em seguida, o arquivo `renf90.par` deve ser atualizado com a linha de comando **OPTION use_metafounders metafounders_gamma.dat**  e executado no programa `blupf90+` para realização da análise genética considerando metafundadores.
 
 ## Referência
+
+Aguilar, I., S. Tsuruta, Y. Masuda, D. A. L. Lourenco, A. Legarra, I. Misztal. 2018. BLUPF90 suite of programs for animal breeding with focus on genomics. No. 11.751. The 11th World Congress of Genetics Applied to Livestock Production, Auckland, New Zealand.
+
+Intel Corporation. Get Intel® oneAPI Math Kernel Library (oneMKL).
+Disponível em: <https://www.intel.com/content/www/us/en/developer/tools/oneapi/onemkl-download.html>
+
+Lourenco, D. A. L., Legarra, A., Tsuruta, S., Masuda, Y., Aguilar, A., Misztal, I. 2020. SingleStep Genomic Evaluations from Theory to Practice: Using SNP Chips and Sequence Data in BLUPF90. Genes, 11:790. <https://doi.org/10.3390/genes11070790>
+
+Lourenco, D. A. L., Tsuruta, S., Masuda, Y., Bermann, M., Legarra, A., Misztal, I. Recent updates in the BLUPF90 software suite. In: Proceedings of the 12th World Congress on Genetics Applied to Livestock Production; 2022 July 3-8; Rotterdam.
+
+Masuda, Y. 2018. Introduction to BLUPF90 suite programs. University of Georgia. <http://nce.ads.uga.edu/wiki/doku.php?id=documentation>
 
 Misztal, I., S. Tsuruta, D. A. L. Lourenco, Y. Masuda, I. Aguilar, A. Legarra, Z. Vitezica. 2014.
 Manual for BLUPF90 family programs. University of Georgia. <http://nce.ads.uga.edu/wiki/doku.php?id=documentation>
 
-Masuda, Y. 2018. Introduction to BLUPF90 suite programs. University of Georgia. <http://nce.ads.uga.edu/wiki/doku.php?id=documentation>
-
-Lourenco, D. A. L., Tsuruta, S., Masuda, Y., Bermann, M., Legarra, A., Misztal, I. Recent updates in the BLUPF90 software suite. In: Proceedings of the 12th World Congress on Genetics Applied to Livestock Production; 2022 July 3-8; Rotterdam.
-
-Lourenco, D. A. L., Legarra, A., Tsuruta, S., Masuda, Y., Aguilar, A., Misztal, I. 2020. SingleStep Genomic Evaluations from Theory to Practice: Using SNP Chips and Sequence Data in BLUPF90. Genes, 11:790. <https://doi.org/10.3390/genes11070790>
-
-Aguilar, I., S. Tsuruta, Y. Masuda, D. A. L. Lourenco, A. Legarra, I. Misztal. 2018. BLUPF90 suite of programs for animal breeding with focus on genomics. No. 11.751. The 11th World Congress of Genetics Applied to Livestock Production, Auckland, New Zealand.
+PEREIRA, J. C. C. 2008. Melhoramento genético aplicado à produção animal. 5ª ed. Belo Horizonte: FEPMVZ Editora, 617 p. ISBN 978-85-87144-30-0.
