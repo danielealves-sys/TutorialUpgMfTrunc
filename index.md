@@ -1323,11 +1323,10 @@ source ~/.bashrc
 ```shell
 ./gammaf90 < gamma.par
 ```
+
 Se o programa iniciar sem apresentar erros de biblioteca, a configuração foi concluída com sucesso.
 
-
-## Metafundadores - (Procedimento completo para uso do gammaf90 e análise com metafundadores).
-
+## Metafundadores - (Procedimento completo para uso do gammaf90 e análise com metafundadores)
 
 ### Objetivo
 
@@ -1340,7 +1339,7 @@ A inclusão de metafundadores melhora a precisão das análises genéticas ao aj
 
 O programa `gammaf90` é responsável por gerar a matriz Γ e um novo pedigree com metafundadores, enquanto o blupf90+ realiza a análise genética utilizando essas informações.
 
-O programa `gammaf90` faz parte da família de programas BLUPF90 e deve ser solicitado diretamente ao grupo desenvolvedor da Universidade da Geórgia (EUA), por meio do e-mail *blupf90@uga.edu*, mediante autorização para uso acadêmico. `https://nce.ads.uga.edu/software/`
+O programa `gammaf90` faz parte da família de programas BLUPF90 e deve ser solicitado diretamente ao grupo desenvolvedor da Universidade da Geórgia (EUA), por meio do e-mail *<blupf90@uga.edu>*, mediante autorização para uso acadêmico. `https://nce.ads.uga.edu/software/`
 
 As análises genéticas podem ser conduzidas de duas formas:
 
@@ -1352,11 +1351,130 @@ Ambas as metodologias podem incorporar metafundadores (`gammaf90`) para correç�
 
 ### Passo 1 - Preparação dos dados
 
+Criação de Metafundadores (MFs) no Pedigree.
+
+Você deve definir quantos metafundadores (MFs) quer ter.
+
+Eles representam grupos genéticos antigos — por exemplo, diferentes bases ou raças fundadoras.
+
+Exemplo:
+
+MF1 = base Angus
+
+MF2 = base Brangus
+
+MF3 = base Nelore
+
 Todos os arquivos necessários para a análise devem estar reunidos na mesma pasta, incluindo o arquivo de fenótipos `feno_expandido.txt`e Pedigree `ped_estendido.txt`.
 
 + Fenótipo: `feno_expandido.txt`
 
 + Pedigree: `ped_estendido.txt`
+
+Objetivo
+
+Gerar um novo arquivo de pedigree (ped_meta.txt) onde os pais desconhecidos (0) são substituídos por metafundadores (-MF1, -MF2, ...), para uso em análises genéticas com o pacote BLUPF90+.
+
+**Configurar ambiente no RStudio**
+
+Antes de tudo, aponte o diretório onde estão seus arquivos:
+
+```shell
+# Definir diretório de trabalho
+setwd("C:/Users/SeuUsuario/Downloads")  # ajuste o caminho conforme sua pasta
+
+# Verificar se os arquivos estão lá
+list.files()
+```
+
+Você deve ver algo como:
+
+```shell
+[1] "ped_estendido.txt" "renum7_meta.par"
+```
+
+Carregar o pedigree original
+
+```shell
+# Carregar pacotes necessários
+library(tidyverse)
+
+# Ler o arquivo de pedigree
+ped <- read.table("ped_estendido.txt", header = FALSE)
+colnames(ped) <- c("animal", "pai", "mae")
+
+# Visualizar as primeiras linhas
+head(ped)
+```
+
+Definir os Metafundadores
+
+Defina quantos MFs você deseja criar e como eles serão atribuídos.
+
+```shell
+# Definir nomes dos metafundadores
+MFs <- c("MF1", "MF2", "MF3")  # você pode mudar o número ou os nomes
+```
+
+Substituir os pais desconhecidos (0) pelos MFs
+
+Aqui você tem duas opções:
+
+🔸 Opção A — Aleatória (cada linha recebe um MF sorteado)
+
+Ideal para dados sem estrutura prévia de grupos fundadores.
+
+```shell
+set.seed(123)  # garante reprodutibilidade
+
+ped <- ped %>%
+  mutate(
+    pai = ifelse(pai == 0, paste0("-", sample(MFs, n(), replace = TRUE)), pai),
+    mae = ifelse(mae == 0, paste0("-", sample(MFs, n(), replace = TRUE)), mae)
+  )
+```
+
+🔸 Opção B — Por intervalo de IDs
+
+Útil se você quer que animais de certas faixas usem um MF específico.
+
+```shell
+ped <- ped %>%
+  mutate(
+    pai = case_when(
+      pai == 0 & animal <= 10 ~ "-MF1",
+      pai == 0 & animal <= 20 ~ "-MF2",
+      pai == 0 ~ "-MF3",
+      TRUE ~ as.character(pai)
+    ),
+    mae = case_when(
+      mae == 0 & animal <= 10 ~ "-MF1",
+      mae == 0 & animal <= 20 ~ "-MF2",
+      mae == 0 ~ "-MF3",
+      TRUE ~ as.character(mae)
+    )
+  )
+```
+
+Salvar o novo pedigree
+
+```shell
+write.table(ped, "ped_meta.txt", row.names = FALSE, col.names = FALSE, quote = FALSE)
+cat("✅ Arquivo 'ped_meta.txt' criado com sucesso!\n")
+```
+
+onferir resultado
+
+Abra o arquivo `ped_meta.txt` e verifique se os pais desconhecidos foram substituídos corretamente:
+
+```shell
+1 -MF1 -MF3
+2 -MF2 -MF1
+3 -MF3 -MF2
+4 -MF1 -MF2
+5 1 -MF1
+6 1 -MF3
+```
 
 ### Passo 2 - Padronizar IDs
 
@@ -1388,11 +1506,13 @@ EFFECT
 RANDOM
 animal
 FILE
-ped_estendido.txt
+ped_meta.txt
 SNP_FILE
 #geno_40.txt
 PED_DEPTH
-3
+0
+UPG_TYPE
+in_pedigrees
 
 #OPTION method VCE
 #OPTION solution mean
@@ -1408,7 +1528,7 @@ PED_DEPTH
 + Rode `renumf90`:
 
 ```shell
-.\renumf90 .\renum7_meta.par > saida_renum.txt
+./renumf90 ./renum7_meta.par > saida_renum.txt
 ```
 
 Verificar se foram gerados os seguintes arquivos:
@@ -1421,55 +1541,30 @@ Verificar se foram gerados os seguintes arquivos:
 
 ### Passo 4 - Geração da matriz de metafundadores (Γ)
 
-Objetivo: criar o arquivo `metafounders_gamma.dat` e o novo pedigree com metafundadores.
-
-Procedimento:
-
-1. Criar o arquivo `gamma.par` com o conteúdo abaixo:
-
-```shel
-PEDFILE renadd03.ped
-PED_DEPTH 10
-OPTION gamma
-```
-
-2. Executar o comando:
+1. Executar o comando:
 
 ```shell
-./gammaf90.date < gamma.par > saida_gammaf90.txt
-```
-
-+ Agora você pode executar o BLUPF90+ e obter as soluções.
-
-```shell
-.\blupf90+.exe .\renf90.par > saida_gblup.txt
+./gammaf90.date --snpfile geno_40.txt --pedfile renadd03.ped > saida_gammaf90.txt
 ```
 
 Arquivos gerados:
 
-> `metafounders_gamma.dat` → matriz de relacionamento entre metafundadores (Γ);
-
-> `pedigree_metafounders.txt` → pedigree ajustado com metafundadores;
-
 > Valor médio de Γ apresentado no txt (`saida_gammaf90.txt`).
 
-### Passo 5 - Análise genética com BLUPF90+
+Verificar se foram gerados os seguintes arquivos:
 
-Objetivo: realizar a avaliação genética considerando os metafundadores.
+> gamma.txt
 
-Procedimento:
+Renomeie o arquivo de saída "`gamma.txt`" para "`renadd03.ped_gamma`".
 
-1. Abrir o arquivo renf90.par (gerado na Etapa 1) e adicionar ao final a linha:
+Substitua "add_an_animal" (ou "add_an_upg" ou "add_an_upginb") no renf90.par por "`add_an_meta`".
 
-```shell
-OPTION use_metafounders metafounders_gamma.dat
-```
-
-2. Executar o comando:
++ Agora você pode executar o BLUPF90+ e obter as soluções.
 
 ```shell
-./blupf90+ < renf90.par > saida_blupf90.txt
+./blupf90+.exe ./renf90.par > saida_gblup.txt
 ```
+
 Relatório de execução da análise com metafundadores.
 
 + Soluções `solutions`
@@ -1479,11 +1574,6 @@ Soluções dos efeitos fixos e valores genéticos preditos.
 ```text
 
 ```
-
-Resumo:
-
-Após a renumeração dos animais com o programa `renumf90`, o arquivo de pedigree renumerado (`renadd03.ped`) deve ser utilizado no `gammaf90` para gerar a matriz de metafundadores (`metafounders_gamma.dat`) e o novo pedigree ajustado (`pedigree_metafounders.txt`).
-Em seguida, o arquivo `renf90.par` deve ser atualizado com a linha de comando **OPTION use_metafounders metafounders_gamma.dat**  e executado no programa `blupf90+` para realização da análise genética considerando metafundadores.
 
 ## Referência
 
