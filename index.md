@@ -188,7 +188,7 @@ O procedimento básico para rodar o programa conforme o sistema operacional:
 ## Exemplos em cada seção
 
 Em cada parte deste tutorial serão apresentados exemplos práticos para facilitar a aplicação dos conceitos.
-Os arquivos utilizados nos exemplos — como *fenótipo* (`feno.txt`), *pedigree* (`ped.txt`), *arquivos de parâmetros* (`renun.par`) e *genótipos* (`geno.txt`) foram adaptados do exemplo do livro de Jonas Pereira e os genótipos foram obtidos por simulação. Link de acesso aos arquivos na pasta ().
+Os arquivos utilizados nos exemplos — como *fenótipo* (`feno.txt`), *pedigree* (`ped.txt`), *arquivos de parâmetros* (`renun.par`) e *genótipos* (`geno.txt`) foram adaptados do exemplo do livro de Jonas Pereira e os genótipos foram obtidos por simulação. Link de acesso aos arquivos na pasta (<https://github.com/danielealves-sys/TutorialUpgMfTrunc/tree/main/dados>).
 
 O arquivo `feno.txt` contém as informações fenotípicas de cada animal.
 Cada linha representa um indivíduo, com colunas correspondentes ao identificador do animal, ao grupo contemporâneos e ao valor observado da característica (por exemplo, peso, circunferência escrotal, etc.).
