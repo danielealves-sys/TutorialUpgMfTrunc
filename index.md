@@ -8,6 +8,15 @@ tags: [introdução,tutorial]
 
 # Introdução
 
+## Sobre este tutorial
+
+### Informações gerais
+
+Este material suplementar ao capítulo do livro **III Simpósio de Produção Animal** (doi: ) foi elaborado para orientar a configuração de modelos em arquivos de parâmetro e a preparação de arquivos de dados, pedigree e genótipos utilizados nos programas da família BLUPF90, com foco em análises genômicas aplicadas à avaliação genética de bovinos de corte.
+O tutorial assume que o leitor já possua conhecimento básico de modelos lineares mistos e noções de manipulação de dados em computador. Experiência prévia com softwares de análise genética, como BLUPF90 ou similares, também é desejável para melhor compreensão.
+
+As funcionalidades do BLUPF90+ são apresentadas de forma progressiva. Cada tópico inicia com exemplos simples e didáticos,envolvendo análises BLUP tradicional e ssGBLUP, seguimos de aplicações mais práticas que envolvem metafundadores (MFs), grupos parentais desconhecidos (UPGs) e truncamento de pedigree, metodologias que contribuem para aumentar a acurácia e reduzir o viés na avaliação genômica. Recomenda-se a leitura desde os conceitos iniciais, pois os mesmos servem de base para análise mais avançadas.
+
 ## Breve introdução aos programas BLUPF90
 
 ### O que é BLUPF90?
@@ -24,45 +33,42 @@ Agora, analisaremos suas vantagens do ponto de vista do usuário.
 
 #### Simplicidade
 
-O comportamento do programa é muito simples. Cada programa BLUPF90 lê um arquivo de parâmetros, que descreve os nomes dos arquivos de dados e de linhagem, modelos e componentes de variância (iniciais) a serem usados ​​na análise.
-O arquivo de parâmetros é um pequeno arquivo de texto contendo alguns pares de palavras-chave e valores para descrever as informações. É conciso, mas capaz de especificar modelos gerais. Depois de aprender a escrever um arquivo de parâmetros, você poderá realizar análises muito complexas com o programa.
-Cada programa salva as soluções das equações do modelo misto (por exemplo, EBV) em um arquivo. Os componentes de variância estimada também são salvos em arquivos permanentemente.
+O comportamento do programa é muito simples. Cada programa BLUPF90 lê um arquivo de parâmetros próprio, mas bastante similar entre os programas, que descreve os nomes dos arquivos de entrada, efeitos incluídos nos modelos (lincados por colunas dos arquivos de entrada) e componentes de variância (chutes iniciais ou valores estimados) a serem usados na análise. O arquivo de parâmetros é um pequeno arquivo de texto `.par`. É conciso, mas capaz de especificar uma série de modelos de avaliação genética. Depois de aprender a escrever um arquivo de parâmetros, você poderá realizar análises muito complexas com o programa. Alguns programas salvam as soluções das equções do modelo misto (por exemplo, EBV) em um arquivo de soluções chamado `solutions`. Os componentes de variância estimada também são salvos em arquivos específicos.
 
 #### Estabilidade
 
-Os programas foram testados por muitos pesquisadores desde seu lançamento público por volta de 2000. Eles agora são estáveis ​​o suficiente para serem usados ​​em avaliações genéticas de rotina em nível nacional. A equipe da Universidade da Geórgia utiliza intensamente os programas em suas pesquisas.
+Os programas foram testados por muitos pesquisadores desde seu lançamento público por volta de 2000. Eles agora são estáveis ​​o suficiente para serem usados ​​em avaliações genéticas de rotina em larga escala. A equipe da Universidade da Geórgia utiliza intensamente os programas em suas pesquisas.
 
 ### É fácil?
 
-Sim, é. Entretanto, o processo de aprendizagem nem sempre é simples. Podem surgir vários obstáculos ao se aprender a usar os programas BLUPF90 em pesquisas reais. Este é o outro lado da moeda da sua aparente simplicidade.
+Sim, é. Entretanto, o processo de aprendizagem nem sempre é simples. Podem surgir alguns obstáculos ao se aprender a usar os programas BLUPF90 em pesquisas reais.
 
 **Documentação limitada:**
-O site oficial hospeda um manual para os programas (<http://nce.ads.uga.edu/wiki/doku.php>), que contém diversas informações sobre o software.
-No entanto, a documentação disponível, especialmente para iniciantes, ainda é restrita e pode não cobrir todos os detalhes necessários.
+O site oficial hospeda um manual para os programas (<http://nce.ads.uga.edu/wiki/doku.php>), que contém diversas informações sobre o software. Além disso, o grupo de pesquisa da Georgia responsável pelo programa realiza frequentemente cursos práticos para ensinar a utilizar e explorar ao máximo as ferramentas da família de programas BLUPF90.
 
 **Manipulação de dados:**
-Essa não é uma limitação exclusiva do BLUPF90, mas um desafio comum a softwares de análises genéticas.
-A família BLUPF90 é voltada para modelos mistos, sem oferecer recursos internos de manipulação de dados como o R ou o SAS.
-Como os programas utilizam arquivos de texto como entrada, é necessário preparar previamente os arquivos de dados e de pedigree, garantindo que estejam no formato exigido e sem registros inconsistentes.
+A família BLUPF90 tem foco especialmente na estimação dos parâmetros dos modelos mistos, e não oferece internos para manipulação de dados como o R ou o SAS. Como os programas utilizam arquivos de texto como entrada, é necessário preparar previamente os arquivos de fenótipos e de pedigree, garantindo que estejam no formato exigido e sem registros inconsistentes.
+
+Exemplo:
+
+Nome do animal em rebanho comercial: `Vaca_mimosa`
+
+Nome do animal recodificado: `1`
 
 **Pré-processamento:**
 Todos os programas aceitam apenas valores numéricos, para manter a programação simples.
 Se seus arquivos de dados ou pedigree contiverem caracteres (letras ou símbolos), eles devem ser substituídos por códigos inteiros antes da análise.
 Um dos programas, o RENUMF90, pode executar essa tarefa. Para dados de campo ou comerciais, é indispensável rodar o RENUMF90 antes de utilizar o BLUPF90.
 
-### Diferenças gerais
-
-**R e SAS**
-
 **Capacidade e velocidade:**
-O BLUPF90 é capaz de lidar com conjuntos de dados muito grandes e, em geral, é mais rápido que o R e o SAS para esse tipo de análise.
+O BLUPF90 é capaz de lidar com conjuntos de dados muito grandes.
 
 **Modo de operação:**
 O BLUPF90 não é interativo. O usuário precisa preparar um arquivo de parâmetros contendo todos os detalhes da análise (nomes dos arquivos, modelo, parâmetros genéticos e opções).
 O programa apenas lê o arquivo e executa a tarefa definida.
 
 **Sem linguagem de script:**
-Diferentemente do R ou do SAS, o BLUPF90 não possui funções para manipulação de dados.
+O BLUPF90 não possui funções para manipulação de dados.
 Toda a edição ou pré-processamento deve ser feito antes da execução.
 O arquivo de dados já deve conter todas as informações necessárias para a análise.
 
@@ -84,7 +90,7 @@ Letras ou símbolos devem ser convertidos em códigos numéricos antes da análi
 O programa RENUMF90 pode auxiliar nessa conversão.
 
 **Interface:**
-O BLUPF90 não possui interface gráfica. Seu funcionamento é semelhante ao Rscript:
+O BLUPF90 não possui interface gráfica.
 
 + é executado via linha de comando (Prompt de Comando/DOS no Windows, Terminal no macOS ou shells no Linux).
 
@@ -92,18 +98,9 @@ O BLUPF90 não possui interface gráfica. Seu funcionamento é semelhante ao Rsc
 O BLUPF90 não fornece funções próprias para testes de hipótese.
 Alguns programas da família apresentam estatísticas como −2logL, que podem ser usadas pelo usuário para realizar manualmente testes de razão de verossimilhança (LRT).
 
-**Recursos atuais:**
-Os programas mais recentes dão suporte a análises genômicas, especialmente para GBLUP de etapa única (*Single-Step GBLUP*).
-O tempo de processamento foi significativamente aprimorado em procedimentos como:
+**Recursos e atualização para os programas BLUPF90+:**
 
-+ REML (Máxima Verossimilhança Restrita),
-+ BLUP com iteração nos dados, graças ao uso de paralelização e bibliotecas otimizadas.
-
-## Atualização para os programas BLUPF90+
-
-Desde 2022, os programas da família BLUPF90 passaram por uma reorganização e alguns deles foram unificados em uma versão mais moderna. As principais diferenças entre os programas antigos e os atualizados foram descritas por Lourenco et al. (2022) nos anais do WCGALP.
-
-O principal destaque é a criação do BLUPF90+, que integra em um único executável as funções antes distribuídas entre os programas blupf90, remlf90 e airemlf90. Por padrão, o BLUPF90+ opera da mesma forma que o antigo blupf90, construindo e resolvendo o sistema de equações de modelos mistos a partir dos dados e dos componentes de variância especificados no arquivo de parâmetros fornecido pelo usuário. Além disso, o BLUPF90+ permite estimar componentes de variância por REML, utilizando a opção *OPTION method VCE* no arquivo de parâmetros, e possibilita a escolha do algoritmo de estimação. O algoritmo padrão é o AI (*Average Information*), mas o usuário pode alternar para EM (*Expectation–Maximization*) por meio da opção *OPTION EM-REML*.
+Os programas mais recentes da família `BLUPF90+` oferecem suporte avançado a **análises genômicas**, incluindo o **Single-Step GBLUP (ssGBLUP)**, com **melhor desempenho computacional** obtido por meio de **paralelização** e uso de **bibliotecas otimizadas** em procedimentos como **REML (Máxima Verossimilhança Restrita)** e **BLUP com iteração nos dados**. Desde **2022**, os softwares foram **reorganizados e unificados**, integrando em um único executável as funções antes separadas nos programas `blupf90´, ´remlf90` e `airemlf90`, conforme descrito por **Lourenco et al. (2022)** no **WCGALP**. O `BLUPF90+` opera como o antigo *blupf90*, resolvendo o sistema de equações dos modelos mistos a partir dos dados e dos componentes de variância definidos pelo usuário, e também permite a **estimação de componentes de variância por REML** com a opção `OPTION method VCE`. O algoritmo padrão é o AI (Average Information), podendo ser alternado para EM (Expectation–Maximization) por meio da opção `OPTION EM-REML`.
 
 ## Como Executar programas de linha de comando
 
@@ -121,32 +118,44 @@ Existem muitos tutoriais disponíveis sobre esse assunto, por exemplo:
 + Como usar a linha de comando do Windows (DOS)
 (<http://www.computerhope.com/issues/chusedos.htm>)
 
-+ Como executar um arquivo a partir do MS-DOS?
-(<http://www.computerhope.com/issues/ch000598.htm>)
-
 + Guia para iniciantes: Prompt de Comando do Windows
 (<http://www.pcstats.com/articleview.cfm?articleID=1723>)
 
-+ Como abrir o Prompt de Comando
-(<http://pcsupport.about.com/od/commandlinereference/f/open-command-prompt.htm>)
++ Guia básico de comandos Linux para iniciantes
+(<https://www.hostinger.com.br/tutoriais/comandos-linux-basicos>)
+
++ Introdução ao Terminal Linux (Ubuntu, Debian e derivados)
+(<https://ubuntu.com/tutorials/command-line-for-beginners>)
+
++ Como usar o terminal Linux: comandos essenciais e dicas
+(<https://www.linuxpro.com.br/dl/guia_500_comandos_Linux.pdf>)
 
 ## Como executar o programa
 
-O procedimento básico para rodar o programa é o seguinte:
+O procedimento básico para rodar o programa conforme o sistema operacional:
 
 1. Baixe o programa e salve-o em uma pasta.
+**No Windows**
 
-2. Salve os arquivos necessários na mesma pasta.
++ Baixe o executável do programa (blupf90+.exe, remlf90+.exe, etc.) e salve-o em uma pasta local.
+
+**No Linux**
+
++ Baixe o executável (blupf90+, remlf90+, etc.) e salve-o em um diretório local,
+
+2. Coloque todos os arquivos necessários (fenótipo, pedigree, parâmetros, genótipo, etc.) na mesma pasta.
 
 3. Abra o Prompt de Comando e use o comando cd para mudar para o diretório da pasta onde o programa foi salvo.
 
-4. Digite o nome do programa (por exemplo, `blupf90+` ou `blupf90+.exe`) para executá-lo.
+4. Execute o RENUMF90 (por exemplo, `./renumf90` no Linux ou `reumf9.exe` no Windows) para renumerar o pedigree e preparar os arquivos de entrada.
 
-5. Quando solicitado, digite o nome do arquivo de parâmetros. Alguns programas podem pedir informações adicionais.
++ O programa criará novos arquivos renumerados (ex: renaddxx.ped, renaddxx.dat, renf90.par atualizado).
+
+5. Digite o nome do programa (por exemplo, blupf90+ no Linux ou blupf90+.exe no Windows) para executá-lo, e informe o arquivo de parâmetros `renf90.par`.
 
 6. Aguarde a análise ser concluída.
 
-7. Confira e colete os resultados.
+7. Aguarde o término da execução e verifique os resultados gerados no mesmo diretório (solutions...).
 
 # Blup, ssBlup, Metafundadores (MFs), Grupos Parentais Desconhecidos (UPGs) e Truncamento de Pedigree — Análises com dados
 
@@ -164,48 +173,35 @@ O procedimento básico para rodar o programa é o seguinte:
 
 **Pré-requisitos:** R (>=4.x), BLUPF90+ (inclui RENUMF90), utilitários de terminal (Linux/macOS/Windows), conhecimentos básicos de linha de comando.
 
-## Sobre este tutorial
-
-### Informações gerais
-
-Este material foi elaborado para orientar a configuração de modelos em arquivos de parâmetro e a preparação de arquivos de dados, pedigree e genótipos utilizados nos programas da família BLUPF90, com foco em análises genômicas aplicadas à avaliação genética de bovinos de corte.
-O tutorial assume que o leitor já possua conhecimento básico de modelos lineares mistos e noções de manipulação de dados em computador. Experiência prévia com softwares de análise genética, como BLUPF90 ou similares, também é desejável para melhor compreensão.
-
-As funcionalidades do BLUPF90+ são apresentadas de forma progressiva. Cada capítulo inicia com exemplos simples e didáticos, seguidos de aplicações mais práticas que envolvem metafundadores (MFs), grupos parentais desconhecidos (UPGs) e truncamento de pedigree — metodologias que contribuem para aumentar a acurácia e reduzir o viés na avaliação genômica.
-Recomenda-se que o leitor não pule etapas, mesmo que algum conteúdo pareça básico, pois os conceitos iniciais servem de base para as análises mais avançadas.
-
 ## Visão geral das metodologias (resumo rápido)
 
-**BLUP (Best Linear Unbiased Prediction — Melhor Predição Linear Não Viesada):** É o método clássico de avaliação genética, que utiliza informações de pedigree e fenótipos para predizer o valor genético dos animais.
+**BLUP (Best Linear Unbiased Prediction — Melhor Preditor Linear Não Viesado):** É o método clássico de avaliação genética, que utiliza informações de pedigree e fenótipos para predizer o valor genético dos animais.
 
-**ssGBLUP (Single-step Genomic BLUP — BLUP Genômico em Etapa Única):** É uma extensão do BLUP que integra informações de pedigree, fenótipos e marcadores genômicos em uma única análise. Dessa forma, permite aumentar a acurácia da predição genética, especialmente para animais jovens sem registros fenotípicos.
+**ssGBLUP (Single-step Genomic BLUP — BLUP Genômico de Passo único):** É uma extensão do BLUP que integra informações de pedigree, fenótipos e marcadores genômicos em uma única análise. Dessa forma, permite aumentar a acurácia da predição genética, especialmente para animais jovens sem registros fenotípicos.
 
 **UPGs (Unknown Parent Groups ou Grupos Parentais Desconhecidos):** Agrupa indivíduos com pais desconhecidos em classes que tentam capturar diferenças de base genética entre *cohorts*  (um grupo de indivíduos que compartilham uma característica em comum e são acompanhados/observados durante um período de tempo). Ajuda a corrigir vieses quando há falta de pedigree.
 
-**Metafundadores (MFs):** Representam populações fundadoras com uma matriz de relações entre metafundadores que modela níveis de consanguinidade e estrutura entre fundadores. Em SS-GBLUP, MFs permitem alinhar melhor a matriz genômica G com a matriz de pedigree A e corrigir a base genética.
+**Metafundadores (MFs):** Representam populações fundadoras com uma matriz de relações entre metafundadores que modela níveis de consanguinidade e estrutura entre fundadores. Em ssGBLUP, os MFs permitem alinhar melhor a matriz genômica G com a matriz de pedigree A e corrigir a base genética.
 
 **Truncamento de pedigree:** Remover gerações antigas do pedigree (ou definir pais como desconhecidos a partir de uma data) reduz o custo computacional e, em alguns cenários, melhora a acurácia quando informação antiga é ruidosa ou mal registrada. Porém, pode introduzir viés se feito incorretamente.
 
 ## Exemplos em cada seção
 
 Em cada parte deste tutorial serão apresentados exemplos práticos para facilitar a aplicação dos conceitos.
-Os arquivos utilizados nos exemplos — como *fenótipo* (`feno.txt`), *pedigree* (`ped.txt`), *arquivos de parâmetros* (`renun.par`) e *genótipos* (`geno.txt`) — são baseados nos dados da aula prática dados para demonstração das metodologias de *Blup, ssGblup, metafundadores (MFs), grupos parentais desconhecidos (UPGs) e truncamento de pedigree*. Link de acesso aos arquivos na pasta ().
+Os arquivos utilizados nos exemplos — como *fenótipo* (`feno.txt`), *pedigree* (`ped.txt`), *arquivos de parâmetros* (`renun.par`) e *genótipos* (`geno.txt`) foram adaptados do exemplo do livro de Jonas Pereira e os genótipos foram obtidos por simulação. Link de acesso aos arquivos na pasta ().
 
-O arquivo geno.txt contém as informações de marcadores SNP de cada animal.
+O arquivo `feno.txt` contém as informações fenotípicas de cada animal.
+Cada linha representa um indivíduo, com colunas correspondentes ao identificador do animal, ao grupo contemporâneos e ao valor observado da característica (por exemplo, peso, circunferência escrotal, etc.).
 
 Ele é utilizado para:
 
-+ Construir a matriz genômica (G), essencial nas análises ssGBLUP;
++ Informar ao programa os valores observados da característica em estudo;
 
-+ Permitir a predição de valores genéticos estimados (GEBVs), aumentando a acurácia em relação ao BLUP tradicional;
++ Servir como base para a estimação dos componentes de variância e dos valores genéticos;
 
-+ Integrar dados de genótipo e pedigree, possibilitando a modelagem com metafundadores e correção de base genética.
++ Relacionar os dados fenotípicos ao pedigree e, quando disponível, aos genótipos.
 
-Todos os exemplos estarão *destacados em caixas* ao longo do texto, permitindo que o leitor identifique rapidamente os arquivos, comandos e saídas necessários para reproduzir as análises em seu próprio ambiente de trabalho.
-
-### Exemplo modelo animal
-
-Dados de exemplo:
+Dados de exemplo para organização dos arquivos:
 
 Tabela 1. Informações fenotípicas, pedigree e grupo contemporâneo utilizadas para ajuste do modelo animal, considerando pesos ajustados aos 205 dias de idade
 
@@ -228,11 +224,42 @@ Fonte: Adaptado de Pereira (2008).
 
 > o número dentro do parêntese é o **ID real do bezerro** (usado no modelo animal).
 
-## Avaliação do Modelo Animal Tradicional (BLUP) – Execução Completa ***vs*** Reduzida
+O arquivo `ped.txt` contém as informações de pedigree dos animais.
+Cada linha apresenta três colunas: identificador do animal, do pai e da mãe, respectivamente.
 
-Como executar primeiro o modelo BLUP com todos os animais (modelo “completo”) e, na sequência, rodar o mesmo modelo mas sem os animais jovens (modelo “reduzido”) para comparar componentes de variância, log-verossimilhança e soluções (EBVs), e interpretar a influência dos animais jovens nos resultados.
+Ele é utilizado para:
 
-Os dados apresentados na (Tabela 1) serão utilizados para a realização das avaliações de exemplos (completo) a seguir.
++ Construir a matriz de parentesco (A) utilizada nas análises BLUP e ssGBLUP;
+
++ Identificar relações de parentesco entre indivíduos genotipados e não genotipados;
+
++ Controlar a estrutura genética da população, permitindo a modelagem de UPGs e MFs.
+
+O arquivo `renum.par` contém as instruções de execução do programa, incluindo a localização dos arquivos de dados, estrutura dos efeitos e parâmetros do modelo.
+
+Ele é utilizado para:
+
++ Especificar as características a serem analisadas e seus respectivos efeitos fixos e aleatórios;
+
++ Indicar os arquivos de entrada (fenótipo, pedigree, genótipos) e de saída dos resultados;
+
++ Controlar as opções do processo de renumeração e preparação dos dados para programas como o RENUMF90
+
+O arquivo `geno.txt` contém as informações de marcadores SNP de cada animal.
+
+Ele é utilizado para:
+
++ Construir a matriz genômica (G), essencial nas análises ssGBLUP;
+
++ Permitir a predição de valores genéticos estimados (GEBVs), aumentando a acurácia em relação ao BLUP tradicional;
+
++ Integrar dados de genótipo e pedigree, possibilitando a modelagem com metafundadores e correção de base genética.
+
+Todos os exemplos estarão **destacados em caixas** ao longo do texto, permitindo que o leitor identifique rapidamente os arquivos, comandos e saídas necessários para reproduzir as análises em seu próprio ambiente de trabalho.
+
+## Avaliação do Modelo Animal Tradicional (BLUP)
+
+Os dados apresentados na Tabela 1 serão utilizados para a realização das avaliações de exemplos (completo) a seguir.
 
 ### Passo 1 - Preparação dos dados
 
@@ -242,16 +269,7 @@ Os dados apresentados na (Tabela 1) serão utilizados para a realização das av
 
   + `ped.txt` → deve conter pedigree (ID animal, pai, mãe).
 
-  Sugestão: abra os dois arquivos no R para checar se as colunas estão corretas:
-
-```r
-#ler arquivos
-feno <- read.table("feno.txt", header=TRUE)
-ped  <- read.table("ped.txt", header=TRUE)
-
-head(feno)
-head(ped)
-```
+  Sugestão: Abra os dois arquivos no R para checar se as colunas estão corretas. A conferência de cada etapa é um processo muito importante em análise de dados.
 
 Fenótipo `feno.txt`
 
@@ -344,15 +362,16 @@ PED_DEPTH
 
 + Rode `renumf90.exe`:
 
-  + Com um .par inicial para gerar os arquivos `renf90.dat` e `renadd_ped.txt`.
+  + Use o cartão de parâmetros `.par`como entrada para rodar o `BLUPF90+`.
 
-  + Ele também vai criar um novo `renf90.par` adaptado com nomes corretos e renumerados.
+  + Ele também vai criar um novo `renf90.par` com IDs e efeitos renumerados.
+
+  `renf90.par` – arquivo de parâmetros gerado automaticamente pelo programa `renumf90`, contendo todas as informações atualizadas do modelo após a renumeração, como os identificadores (IDs) de animais, pais e efeitos já convertidos para a nova sequência numérica, as definições dos efeitos fixos e aleatórios, bem como os caminhos dos arquivos de dados ajustados. Esse cartão substitui o original e deve ser utilizado como entrada no programa `blupf90+`, assegurando que os identificadores e estruturas do modelo estejam consistentes e corretamente vinculados para a execução das análises genéticas subsequentes.
 
 ```shell
 .\renumf90.exe .\renum.par > saida_renum.txt
 ```
-
-+ Use esse novo .par final para rodar o BLUPF90+.exe:
+###Passo 4 - Rodar o BLUPF90+ no Prompt de Comando do Windows
 
 Agora você pode executar o BLUPF90+ e obter as soluções.
 
@@ -362,7 +381,7 @@ Agora você pode executar o BLUPF90+ e obter as soluções.
 .\blupf90+.exe .\renf90.par > saida_blup.txt
 ```
 
-+ Soluções `solutions`
++ Soluções para os efeitos fixos e aleatórios armazenadas no arquivo `solutions`.
 
 ```Text
 trait/effect level  solution
@@ -461,13 +480,15 @@ Consulta as OPTIONS: (<https://nce.ads.uga.edu/wiki/doku.php?id=readme.blupf90pl
 .\renumf90.exe .\renum2.par > saida_renum.txt
 ```
 
-+ Agora você pode executar o BLUPF90+ e obter as soluções.
+### Passo 4 - Rodar o BLUPF90+ no Prompt de Comando do Windows
+
++ Será feita a estimação dos valores genéticos e/ou parâmetros genéticos.
 
 ```shell
 .\blupf90+.exe .\renf90.par > saida_Gblup.txt
 ```
 
-+ Soluções `solutions`
++ Soluções para os efeitos fixos e aleatórios armazenadas no arquivo `solutions`.
 
 ```text
 trait/effect level  solution
@@ -626,14 +647,19 @@ OPTION conv crit 1e-15
 ```shell
 .\renumf90.exe .\renum3.par > saida_renum.txt
 ```
+### Rodar o BLUPF90+ no Prompt de Comando do Windows
 
-+ Agora você pode executar o BLUPF90+ e obter as soluções.
+Agora você pode executar o BLUPF90+ e obter as soluções.
+
+### Passo 4 - Rodar o BLUPF90+ no Prompt de Comando do Windows
+
++ Será feita a estimação dos valores genéticos e/ou parâmetros genéticos.
 
 ```shell
 .\blupf90+.exe .\renf90.par > saida_blup.txt
 ```
 
-+ Soluções `solutions`
++ Soluções para os efeitos fixos e aleatórios armazenadas no arquivo `solutions`.
 
 ```text
 trait/effect level  solution
@@ -737,13 +763,16 @@ OPTION conv crit 1e-15
 .\renumf90.exe .\renum4.par > saida_renum.txt
 ```
 
-+ Agora você pode executar o BLUPF90+ e obter as soluções.
+###Passo 4 - Rodar o BLUPF90+ no Prompt de Comando do Windows
+
+
++ Será feita a estimação dos valores genéticos e/ou parâmetros genéticos.
 
 ```shell
 .\blupf90+.exe .\renf90.par > saida_Gblup.txt
 ```
 
-+ Soluções `solutions`
++ Soluções para os efeitos fixos e aleatórios armazenadas no arquivo `solutions`.
 
 ```text
 trait/effect level  solution
@@ -952,13 +981,15 @@ OPTION max_field_readine 50
 .\renumf90.exe .\renum5.par > saida_renum.txt
 ```
 
-+ Agora você pode executar o BLUPF90+ e obter as soluções.
+### Passo 4 - Rodar o BLUPF90+ no Prompt de Comando do Windows
+
++ Será feita a estimação dos valores genéticos e/ou parâmetros genéticos.
 
 ```shell
 .\blupf90+.exe .\renf90.par > saida_blup.txt
 ```
 
-+ Soluções `solutions`
++ Soluções para os efeitos fixos e aleatórios armazenadas no arquivo `solutions`.
 
 ```text
 trait/effect level  solution
@@ -1153,13 +1184,15 @@ OPTION max_field_readine 50
 .\renumf90.exe .\renum6.par > saida_renum.txt
 ```
 
-+ Agora você pode executar o BLUPF90+ e obter as soluções.
+### Passo 4 - Rodar o BLUPF90+ no Prompt de Comando do Windows
+
++ Será feita a estimação dos valores genéticos e/ou parâmetros genéticos.
 
 ```shell
 .\blupf90+.exe .\renf90.par > saida_gblup.txt
 ```
 
-+ Soluções `solutions`
++ Soluções para os efeitos fixos e aleatórios armazenadas no arquivo `solutions`.
 
 ```text
 trait/effect level  solution
@@ -1407,7 +1440,7 @@ colnames(ped) <- c("animal", "pai", "mae")
 head(ped)
 ```
 
-Definir os Metafundadores
+Definir os Metafundadores:
 
 Defina quantos MFs você deseja criar e como eles serão atribuídos.
 
@@ -1456,14 +1489,14 @@ ped <- ped %>%
   )
 ```
 
-Salvar o novo pedigree
+Salvar o novo pedigree:
 
 ```shell
 write.table(ped, "ped_meta.txt", row.names = FALSE, col.names = FALSE, quote = FALSE)
 cat("✅ Arquivo 'ped_meta.txt' criado com sucesso!\n")
 ```
 
-onferir resultado
+Conferir resultado:
 
 Abra o arquivo `ped_meta.txt` e verifique se os pais desconhecidos foram substituídos corretamente:
 
@@ -1541,13 +1574,13 @@ Verificar se foram gerados os seguintes arquivos:
 
 ### Passo 4 - Geração da matriz de metafundadores (Γ)
 
-1. Executar o comando:
++ Executar o comando:
 
 ```shell
 ./gammaf90.date --snpfile geno_40.txt --pedfile renadd03.ped > saida_gammaf90.txt
 ```
 
-Arquivos gerados:
++ Arquivos gerados:
 
 > Valor médio de Γ apresentado no txt (`saida_gammaf90.txt`).
 
@@ -1567,7 +1600,7 @@ Substitua "add_an_animal" (ou "add_an_upg" ou "add_an_upginb") no renf90.par por
 
 Relatório de execução da análise com metafundadores.
 
-+ Soluções `solutions`
++ Soluções para os efeitos fixos e aleatórios armazenadas no arquivo `solutions`.
 
 Soluções dos efeitos fixos e valores genéticos preditos.
 
@@ -1578,6 +1611,8 @@ Soluções dos efeitos fixos e valores genéticos preditos.
 ## Referência
 
 Aguilar, I., S. Tsuruta, Y. Masuda, D. A. L. Lourenco, A. Legarra, I. Misztal. 2018. BLUPF90 suite of programs for animal breeding with focus on genomics. No. 11.751. The 11th World Congress of Genetics Applied to Livestock Production, Auckland, New Zealand.
+
+Andrade, B. 2016. Guia com mais de 500 comandos do Linux (Explicados). GNU/ linux - Brasil.<https://www.linuxpro.com.br/dl/guia_500_comandos_Linux.pdf>
 
 Intel Corporation. Get Intel® oneAPI Math Kernel Library (oneMKL).
 Disponível em: <https://www.intel.com/content/www/us/en/developer/tools/oneapi/onemkl-download.html>
@@ -1592,3 +1627,4 @@ Misztal, I., S. Tsuruta, D. A. L. Lourenco, Y. Masuda, I. Aguilar, A. Legarra, Z
 Manual for BLUPF90 family programs. University of Georgia. <http://nce.ads.uga.edu/wiki/doku.php?id=documentation>
 
 PEREIRA, J. C. C. 2008. Melhoramento genético aplicado à produção animal. 5ª ed. Belo Horizonte: FEPMVZ Editora, 617 p. ISBN 978-85-87144-30-0.
+
