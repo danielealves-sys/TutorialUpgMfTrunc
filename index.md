@@ -6,7 +6,7 @@ subject: "Introdução aos programas do conjunto BLUPF90"
 tags: [introdução,tutorial]
 ...
 
-# Introdução - Versão 01-2025
+# Introdução
 
 ## Sobre este tutorial
 
